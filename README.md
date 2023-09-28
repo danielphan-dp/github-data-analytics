@@ -2,6 +2,10 @@
 
 [Official Website](https://console.cloud.google.com/marketplace/product/github/github-repos?pli=1&project=friendly-medley-356508)
 
+#### Introduction
+
+This repo contains foundational work for analyzing GitHub repositories. Querying large datasets on 
+
 #### Description (From the Official Site)
 
 GitHub is how people build software and is home to the largest community of open source developers in the 
@@ -30,6 +34,11 @@ using Python Scrips (and perhaps utilizing existing libraries as well as custom 
 Input: The datasource containing a snapshot of data collected from ~2.9 millions public GitHub repos.
 
 Output: Useful data for training machine learning models.
+
+#### General Strategy
+
+For filtering, perform all operations that can be done by SQL first. Then, whatever are left will be performed by the
+connecting to the GitHub API.
 
 #### Requirements & Tasks:
 
