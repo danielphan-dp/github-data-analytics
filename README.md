@@ -18,7 +18,31 @@ public dataset. Watch this short video to learn how to get started quickly using
 
 #### Notes
 
+- Need Google Cloud account and credentials.
+
 - Both GitHub Activity Data (GoogleBigQuery) and GitHub API are used.
 
 - It is important to decide which part of the data pipeline to be processed using SQL and which part to be processed
 using Python Scrips (and perhaps utilizing existing libraries as well as custom data structures).
+
+#### Input and Output
+
+Input: The datasource containing a snapshot of data collected from ~2.9 millions public GitHub repos.
+
+Output: Useful data for training machine learning models.
+
+#### Requirements & Tasks:
+
+[ ] Capable of selecting the N repos in **star_count** and **watch_count.**
+
+- For examples, top 100 repos in star_count or watch_count.
+
+[ ] Capable of selecting the repos that have commits within a time period.
+
+- For examples, having commits during the last year only.
+
+[ ] Capable of selecting only repos that have file `pom.xml` (build configuration file for the Maven build system)
+
+[ ] Capable of computing some metrics:
+- `total_loc` (sum of lines of code in all files)
+- `test_loc` (sum of lines of code in  test files, i.e., whose file name/path contains the case-insensitive word "test")
