@@ -33,16 +33,16 @@ Output: Useful data for training machine learning models.
 
 #### Requirements & Tasks:
 
-[ ] Capable of selecting the N repos in **star_count** and **watch_count.**
+- [ ] Capable of selecting the N repos in **star_count** and **watch_count.**
 
-- For examples, top 100 repos in star_count or watch_count.
+  - For examples, top 100 repos in star_count or watch_count.
 
-[ ] Capable of selecting the repos that have commits within a time period.
+- [ ] Capable of selecting the repos that have commits within a time period.
 
-- For examples, having commits during the last year only.
+  - For examples, having commits during the last year only.
 
-[ ] Capable of selecting only repos that have file `pom.xml` (build configuration file for the Maven build system)
+- [ ] Capable of selecting only repos that have file `pom.xml` (build configuration file for the Maven build system)
 
-[ ] Capable of computing some metrics:
-- `total_loc` (sum of lines of code in all files)
-- `test_loc` (sum of lines of code in  test files, i.e., whose file name/path contains the case-insensitive word "test")
+- [ ] Capable of computing some metrics:
+  - `total_loc` (sum of lines of code in all files)
+  - `test_loc` (sum of lines of code in  test files, i.e., whose file name/path contains the case-insensitive word "test")
