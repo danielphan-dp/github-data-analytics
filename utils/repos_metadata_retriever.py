@@ -1,5 +1,7 @@
 import json
 import os
+import time
+from tqdm import tqdm
 from pathlib import Path
 import requests
 
@@ -7,19 +9,40 @@ import requests
 class ReposMetadataRetriever:
     def __init__(self, file_path, github_token):
         self.file_path = file_path
+        self.github_token = github_token
+        self.api_rate = 5000
         self.data = self.read()
         self.repos_metadata = {}
 
     def read(self):
-        with open(self.file_path, 'r') as file:
-            data = json.load(file)
+        with open(self.file_path, 'r') as _file_:
+            data = json.load(_file_)
         return data
 
-    def fetch_metadata(self):
-        # google_apis_repos = [repo for repo in self.data if "googleapis/" in repo['repo_name']]
+    def fetch_metadata(self, start=0, end=10):
+        """
+        Fetch metadata of all repos in range [start, end].
+        Then, output to the file "results_[start]_end.json".
+
+        :param start: The start point of the region (inclusive).
+        :param end: The end point of the region (inclusive).
+        :return: None
+        """
+
+        # Boundaries check
+        if not start < end:
+            print(f"Invalid range. Cannot fetch data for entries in range [{start} , {end}]")
+            return
+
+        if start < 0:
+            start = 0
+
+        if end >= len(self.data):
+            end = len(self.data) - 1
+
         repos = self.data
 
-        for repo in repos:
+        for repo in tqdm(repos[start: end + 1], desc="Fetching Data from GitHub API"):
             # Retrieve username and repo name from repo.
             temp = repo['repo_name'].split('/')
             org = temp[0]
@@ -31,17 +54,19 @@ class ReposMetadataRetriever:
             # Create headers with the GitHub API access token.
             headers = {}
             if github_token:
-                headers['Authorization'] = f'token {github_token}'
+                headers['Authorization'] = f'token {self.github_token}'
 
             # Make API request to get data of current repo.
             response = requests.get(url, headers=headers)
             response_json = response.json()
 
-            self.repos_metadata[f"{org}/{repo}"] = response_json
-
             # Perform extra parsing with the http response.
-            if response.status_code == 200:
-                print(org, repo, response_json.get("stargazers_count", 0))
+            if response.status_code == 200:  # OK.
+                self.repos_metadata[f"{org}/{repo}"] = response_json
+            elif response.status_code == 403:  # API Rate exceeded.
+                sleep_time = (1 * 3600) + (1 * 60)
+                print(f"Waiting {sleep_time}s until the GitHub API is ready again.")
+                time.sleep(sleep_time)
             else:
                 print(f"Error {response.status_code}: {response.json().get('message')}")
 
@@ -52,8 +77,13 @@ class ReposMetadataRetriever:
             reverse=True
         ))
 
-    def print_metadata(self):
-        print(self.repos_metadata)
+        # Save the results to a JSON file
+        json_file_name = f"./_github_api_results_/results_{start}_{end + 1}.json"
+        try:
+            with open(json_file_name, "a+") as outfile:
+                json.dump(self.repos_metadata, outfile, indent=4)
+        except IOError as e:
+            print(f"Error occurred: {e}")
 
     def save_data_to_json(self, json_file_name):
         with open(json_file_name, "w") as outfile:
@@ -80,8 +110,9 @@ if __name__ == "__main__":
     )
 
     # Print the JSON data using the handler
-    repos_metadata_retriever.fetch_metadata()
-    repos_metadata_retriever.print_metadata()
+    repos_metadata_retriever.fetch_metadata(start=0, end=5)
+
+    # TODO: Implement more efficient logic, since the GitHub API is limited to 5000 requests / hour.
 
     # Save fetched results to file.
-    repos_metadata_retriever.save_data_to_json('./results.json')
+    # repos_metadata_retriever.save_data_to_json('./results.json')
