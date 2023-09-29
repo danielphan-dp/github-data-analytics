@@ -25,24 +25,20 @@ class ReposMetadataRetriever:
         Then, output to the file "results_[start]_end.json".
 
         :param start: The start point of the region (inclusive).
-        :param end: The end point of the region (inclusive).
+        :param end: The end point of the region (exclusive).
         :return: None
         """
 
         # Boundaries check
-        if not start < end:
-            print(f"Invalid range. Cannot fetch data for entries in range [{start} , {end}]")
+        if not (0 <= start < len(self.data) and
+                0 <= end < len(self.data) and
+                start < end):
+            print(f"Invalid range. Cannot fetch data for entries in range [{start} , {end})")
             return
 
-        if start < 0:
-            start = 0
-
-        if end >= len(self.data):
-            end = len(self.data) - 1
-
+        # Fetch data
         repos = self.data
-
-        for repo in tqdm(repos[start: end + 1], desc="Fetching Data from GitHub API"):
+        for repo in tqdm(repos[start: end], desc="Fetching Data from GitHub API"):
             # Retrieve username and repo name from repo.
             temp = repo['repo_name'].split('/')
             org = temp[0]
@@ -68,7 +64,7 @@ class ReposMetadataRetriever:
                 print(f"Waiting {sleep_time}s until the GitHub API is ready again.")
                 time.sleep(sleep_time)
             else:
-                print(f"Error {response.status_code}: {response.json().get('message')}")
+                print(f"Error {response.status_code}: {response.json().get('message')} | Repo: {org}/{repo}")
 
         # Sort them based on stargazers_count
         self.repos_metadata = dict(sorted(
@@ -110,7 +106,14 @@ if __name__ == "__main__":
     )
 
     # Print the JSON data using the handler
-    repos_metadata_retriever.fetch_metadata(start=0, end=5)
+    repos_metadata_retriever.fetch_metadata(start=0, end=1000)
+
+    # repos_metadata_retriever.fetch_metadata(start=0, end=1000)
+    # repos_metadata_retriever.fetch_metadata(start=1000, end=2000)
+    # repos_metadata_retriever.fetch_metadata(start=2000, end=3000)
+    # repos_metadata_retriever.fetch_metadata(start=3000, end=4000)
+    # repos_metadata_retriever.fetch_metadata(start=4000, end=5000)
+    # repos_metadata_retriever.fetch_metadata(start=5000, end=6000)
 
     # TODO: Implement more efficient logic, since the GitHub API is limited to 5000 requests / hour.
 
