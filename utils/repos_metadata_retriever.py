@@ -30,9 +30,9 @@ class ReposMetadataRetriever:
         """
 
         # Boundaries check
-        if not (0 <= start < len(self.data) and
-                0 <= end < len(self.data) and
-                start < end):
+        start = max(0, start)
+        end = min(end, len(self.data))
+        if not (0 <= start < end <= len(self.data)):
             print(f"Invalid range. Cannot fetch data for entries in range [{start} , {end})")
             return
 
@@ -111,8 +111,8 @@ if __name__ == "__main__":
     # repos_metadata_retriever.fetch_metadata(start=1000, end=2000)
     # repos_metadata_retriever.fetch_metadata(start=2000, end=3000)
     # repos_metadata_retriever.fetch_metadata(start=3000, end=4000)
-    repos_metadata_retriever.fetch_metadata(start=4000, end=5000)
-    # repos_metadata_retriever.fetch_metadata(start=5000, end=6000)
+    # repos_metadata_retriever.fetch_metadata(start=4000, end=5000)
+    repos_metadata_retriever.fetch_metadata(start=5000, end=6000)
 
     # TODO: Implement more efficient logic, since the GitHub API is limited to 5000 requests / hour.
 
