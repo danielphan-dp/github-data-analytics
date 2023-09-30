@@ -39,7 +39,12 @@ class GitRepoParser:
         self.total_loc = total_loc
 
     def compute_test_loc(self):
-        self.test_loc = 0
+        test_loc = 0
+        for file in Path(self.github_repo_dir / self.github_repo_name).glob('**/*test*.java'):
+            if os.path.isfile(file):
+                with open(file, 'r', encoding='utf-8', errors='ignore') as f:
+                    test_loc += len(f.readlines())
+        self.test_loc = test_loc
 
     def compute_metrics(self):
         pass
