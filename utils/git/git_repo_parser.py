@@ -4,19 +4,47 @@ import subprocess
 
 
 class GitRepoParser:
-    def __init__(self, initial_github_repos_dir=Path(""), initial_github_repo_name=Path("")):
-        self.github_repos_dir = initial_github_repos_dir
+    def __init__(self, initial_github_repo_dir=Path(""), initial_github_repo_name=Path("")):
+        self.github_repo_dir = initial_github_repo_dir
         self.github_repo_name = initial_github_repo_name
         self.total_loc = None
         self.test_loc = None
 
     def compute_total_loc(self):
-        self.total_loc = 0
+        # Step 1: Get the list of all files inside a directory.
+        command = ['git', 'ls-files']
+        result = subprocess.run(
+            command,
+            cwd=self.github_repo_dir / self.github_repo_name,
+            stdout=subprocess.PIPE,
+            text=True
+        )
+        files = result.stdout.split('\n')
+
+        # Step 2: For each file in the given list, compute line count then add to total_loc.
+        total_loc = 0
+        for file in files:
+            file_absolute_path = self.github_repo_dir / self.github_repo_name / file
+            if os.path.isfile(
+                    file_absolute_path):  # Make sure this is a file, otherwise os will raise 'Permission Denied'
+                with open(
+                        file_absolute_path,
+                        'r',
+                        encoding='utf-8',
+                        errors='ignore'
+                ) as f:
+                    total_loc += len(f.readlines())
+
+        # Step 3: Update total_loc.
+        self.total_loc = total_loc
 
     def compute_test_loc(self):
         self.test_loc = 0
 
-    def print_analytics(self):
+    def compute_metrics(self):
+        pass
+
+    def print_metrics(self):
         print(f"{self.github_repo_name} | {self.total_loc} | {self.test_loc}")
 
 
@@ -35,4 +63,4 @@ if __name__ == '__main__':
     # Print some analytics.
     print("Repo | Total Loc | Test Loc")
     for parser in parsers:
-        parser.print_analytics()
+        parser.print_metrics()
