@@ -4,8 +4,8 @@ from pathlib import Path
 
 
 class JsonMerger:
-    def __init__(self, files):
-        self.files = files
+    def __init__(self, initial_files):
+        self.files = initial_files
         self.merged_file_contents = {}
 
     @staticmethod

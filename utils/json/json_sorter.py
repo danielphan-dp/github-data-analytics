@@ -5,8 +5,8 @@ from pathlib import Path
 
 class JsonSorter:
 
-    def __init__(self, file_name):
-        self.file_name = file_name
+    def __init__(self, initial_file_name):
+        self.file_name = initial_file_name
         self.sorted_file_contents = self.load_file()
 
     def load_file(self):
