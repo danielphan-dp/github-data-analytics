@@ -7,3 +7,8 @@
     - Test files: have "test" in the path (non-case-sensitive)
 
 - Take a look at Seutil
+
+- Code Refactoring
+  - Add more proper interfaces when interacting with downloaded repos.
+  - Add some tests.
+  - Make classes for modular for maintenance.
