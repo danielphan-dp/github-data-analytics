@@ -10,9 +10,11 @@ class GitRepoParser:
     def __init__(self, initial_github_repo_dir=Path(""), initial_github_repo_name=Path("")):
         self.github_repo_dir = initial_github_repo_dir
         self.github_repo_name = initial_github_repo_name
+
         self.total_loc = None
-        self.language_loc = defaultdict(lambda: 0)
-        self.test_loc = None
+
+        self.language_to_loc = defaultdict(lambda: 0)
+        self.language_to_test_loc = defaultdict(lambda: 0)
 
     def compute_total_loc(self):
         # Step 1: Get the list of all files inside a directory.
@@ -51,19 +53,26 @@ class GitRepoParser:
                 if os.path.isfile(file):
                     with open(file, 'r', encoding='utf-8', errors='ignore') as f:
                         language_loc += len(f.readlines())
-            self.language_loc['Java'] = language_loc
+            self.language_to_loc[language] = language_loc
 
         else:  # Not supported yet.
             # TODO: Implement general logic to handle all languages.
             pass
 
-    def compute_test_loc(self):
-        test_loc = 0
-        for file in Path(self.github_repo_dir / self.github_repo_name).glob('**/*test*.java'):
-            if os.path.isfile(file):
-                with open(file, 'r', encoding='utf-8', errors='ignore') as f:
-                    test_loc += len(f.readlines())
-        self.test_loc = test_loc
+    def compute_language_test_loc(self, language='Java'):
+        # TODO: Use namespace for languages.
+        language_test_loc = 0
+
+        if language == 'Java':
+            for file in Path(self.github_repo_dir / self.github_repo_name).glob('**/*test*.java'):
+                if os.path.isfile(file):
+                    with open(file, 'r', encoding='utf-8', errors='ignore') as f:
+                        language_test_loc += len(f.readlines())
+            self.language_to_test_loc[language] = language_test_loc
+
+        else:  # Not supported yet.
+            # TODO: Implement general logic to handle all languages.
+            pass
 
     def compute_metrics(self):
         pass
@@ -72,8 +81,8 @@ class GitRepoParser:
         print(
             f"{self.github_repo_name} | "
             f"{self.total_loc} | "
-            f"{self.language_loc['Java']} | "
-            f"{self.test_loc}"
+            f"{self.language_to_loc['Java']} | "
+            f"{self.language_to_test_loc['Java']}"
         )
 
 
@@ -85,10 +94,11 @@ if __name__ == '__main__':
     parsers = [GitRepoParser()] * len(github_repos)
     for i, github_repo_name in enumerate(tqdm(github_repos, desc="Processing GitHub Repos"), start=0):
         github_repo_absolute_path = github_repos_dir / github_repo_name
+
         parsers[i] = GitRepoParser(github_repos_dir, github_repo_name)
         parsers[i].compute_total_loc()
         parsers[i].compute_language_loc('Java')
-        parsers[i].compute_test_loc()
+        parsers[i].compute_language_test_loc('Java')
 
     # Print some analytics.
     print("Repo | Total Loc | Java Loc | Test Loc")
