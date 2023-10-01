@@ -38,7 +38,7 @@ if __name__ == "__main__":
     with open(file_path, 'r') as f:
         repos = json.load(f)
         repos = dict(
-            [(url, metadata['clone_url']) for url, metadata in repos.items()][:10]
+            [(url, metadata['clone_url']) for url, metadata in repos.items()][:100]
         )
 
     # Initialize a GitBunkCloner.
