@@ -2,6 +2,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+from tqdm import tqdm
 
 
 class GitBunkCloner:
@@ -23,28 +24,28 @@ class GitBunkCloner:
             print(f'Error cloning {repo_clone_url}: {e}')
 
     def clone_repos(self):
-        for repo_url, repo_clone_url in self.repos.items():
+        for repo_url, repo_clone_url in tqdm(self.repos.items()):
             new_repo_name = repo_url.replace('/', '_')
             self.clone_repo(
                 repo_clone_url=repo_clone_url,
-                target_dir=Path(os.getcwd()) / "_github_repos_" / new_repo_name
+                target_dir=self.destination_directory / new_repo_name
             )
 
 
 if __name__ == "__main__":
-    # Select top 10 repos.
     current_directory = Path(os.getcwd())
-    file_path = current_directory / "_github_api_results_" / "results_merged_and_sorted.json"
+    file_path = current_directory / ".." / ".." / ".." / "Data" / "processed" / "results_merged_and_sorted.json"
+
     with open(file_path, 'r') as f:
         repos = json.load(f)
         repos = dict(
-            [(url, metadata['clone_url']) for url, metadata in repos.items()][:100]
+            [(url, metadata['clone_url']) for url, metadata in repos.items()][0:100]
         )
 
     # Initialize a GitBunkCloner.
     git_bunk_cloner = GitBunkCloner(
         repos,
-        current_directory / "_github_repos_"
+        current_directory / ".." / ".." / ".." / "Data" / "github-cloned-repos"
     )
 
     # Clone.

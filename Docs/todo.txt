@@ -12,3 +12,8 @@
   - Add more proper interfaces when interacting with downloaded repos.
   - Add some tests.
   - Make classes for modular for maintenance.
+
+
+Notes:
+  - Make sure to use Python 3.8 or 3.9 or 3.10.
+    - Seems like Python 3.12 is not widely supported yet by external libs. [Got Errors]
