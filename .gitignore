@@ -1,4 +1,5 @@
 .idea
+Data
+
 .env
-config/env.json
-_github_repos_
+Python/config/env.json

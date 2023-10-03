@@ -1,0 +1,14 @@
+- Merge the JSON files then sort them by # of starts.
+- Start with a sample of 10 repos (then generalize to 100 then all).
+  - Download the repo (git clone), then put the repo to Git ignore
+    - For example: /google/guava --> google_guava (create only 1 level of directories)
+    - Another: /google/guava_v1_1 --> google_guava_v1_1 (replace the first _ when converting back)
+  - Extract the number of lines of Java tests (test_loc) and Java code (total_loc), try Python lib "glob"
+    - Test files: have "test" in the path (non-case-sensitive)
+
+- Take a look at Seutil
+
+- Code Refactoring
+  - Add more proper interfaces when interacting with downloaded repos.
+  - Add some tests.
+  - Make classes for modular for maintenance.
