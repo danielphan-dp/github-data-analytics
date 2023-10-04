@@ -15,5 +15,7 @@
 
 
 Notes:
-  - Make sure to use Python 3.8 or 3.9 or 3.10.
+  - Make sure to use Python <= 3.11
     - Seems like Python 3.12 is not widely supported yet by external libs. [Got Errors]
+  - Current repos for sampling:
+    - https://github.com/google/gson (100% Java)
