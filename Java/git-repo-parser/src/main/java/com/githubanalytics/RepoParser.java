@@ -117,7 +117,7 @@ public class RepoParser {
                         });
                     });
         } else {
-            System.err.println("Error parsing " + repoDir.relativize(javaFile) + ": " + parseResult.getProblems());
+            System.err.println("Error parsing " + repoDir + "/" + repoDir.relativize(javaFile) + ": " + parseResult.getProblems());
         }
 
         return methodsMap;

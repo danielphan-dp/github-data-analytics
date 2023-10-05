@@ -1,44 +1,66 @@
 package com.githubanalytics;
 
+import java.io.File;
 import java.io.IOException;
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class Main {
-    public static void main(String[] args) {
-        // TODO: Generalize this logic to work with all repos in given directory (might need performance check).
-
-        // Set up
-        Path currentDir = Paths.get(System.getProperty("user.dir"));
-        Path repoDir = currentDir.resolve("Data/github-cloned-repos/google_gson");
-        if (!java.nio.file.Files.exists(repoDir)) {
-            System.out.println("Please specify correct path to the Git repo.");
-            return;
+    private static List<String> listDir(String dir) {
+        File folder = new File(dir);
+        List<String> dirList = new ArrayList<>();
+        if (folder.isDirectory()) {
+            for (File file : Objects.requireNonNull(
+                    folder.listFiles(file -> file.isDirectory() && !file.isHidden()))
+            ) {
+                if (file.isDirectory()) {
+                    dirList.add(file.getName());
+                }
+            }
         }
+        return dirList;
+    }
 
-        // Parse the repo
-        RepoParser repoParser = new RepoParser(repoDir);
-        try {
-            String targetDir = "Data/repos-parsed-code/google_gson/";
-            Path outputPath = null;
+    public static void main(String[] args) {
+        Path currentDir = Paths.get(System.getProperty("user.dir"));
+        Path repoDir = currentDir.resolve("Data/github-cloned-repos");
+        List<String> repos = listDir(String.valueOf(repoDir));
 
-            // TODO: Add functionalities to handle paths.
-            Map<String, Map<String, String>> parsingAllFilesResult = repoParser.parseAllFiles();
-            outputPath = currentDir.resolve(targetDir + "all_files_methods.json");
-            repoParser.saveParsingResult(parsingAllFilesResult, outputPath);
+        // At the moment, temporarily filter out repos causing errors by the JavaParser lib.
+        repos.removeIf(repo -> repo.equals("checkstyle_checkstyle"));
 
-            Map<String, Map<String, String>> parsingTestFilesResult = repoParser.parseTestFiles();
-            outputPath = currentDir.resolve(targetDir + "test_files_methods.json");
-            repoParser.saveParsingResult(parsingTestFilesResult, outputPath);
+        System.out.println(repos.size());
+        System.out.println(repos);
 
-            Map<String, Map<String, String>> parsingNonTestFilesResult = repoParser.parseNonTestFiles();
-            outputPath = currentDir.resolve(targetDir + "non_test_files_methods.json");
-            repoParser.saveParsingResult(parsingNonTestFilesResult, outputPath);
+        for (String repo : repos) {
+            Path repoPath = currentDir.resolve("Data/github-cloned-repos/" + repo);
+            RepoParser repoParser = new RepoParser(repoPath);
+            try {
+                String outputDir = "Data/repos-parsed-code/" + repo + "/";
+                Path outputPath = null;
+                Map<String, Map<String, String>> parsingResult = null;
 
-        } catch (IOException e) {
-            e.printStackTrace();
+                parsingResult = repoParser.parseAllFiles();
+                outputPath = currentDir.resolve(outputDir + "all_files_methods.json");
+                repoParser.saveParsingResult(parsingResult, outputPath);
+
+                parsingResult = repoParser.parseTestFiles();
+                outputPath = currentDir.resolve(outputDir + "test_files_methods.json");
+                repoParser.saveParsingResult(parsingResult, outputPath);
+
+                parsingResult = repoParser.parseNonTestFiles();
+                outputPath = currentDir.resolve(outputDir + "non_test_files_methods.json");
+                repoParser.saveParsingResult(parsingResult, outputPath);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }
