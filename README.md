@@ -1,10 +1,9 @@
 ### GitHub Repos Data Analytics
 
-[Official Website](https://console.cloud.google.com/marketplace/product/github/github-repos?pli=1&project=friendly-medley-356508)
-
 #### Introduction
 
-This repo contains foundational work for analyzing GitHub repositories. Querying large datasets on 
+This repo contains foundational work for analyzing GitHub repositories. Providing a way to obtain useful information and
+insights from ~2.9 million of public GitHub repos.
 
 #### Description (From the Official Site)
 
@@ -18,7 +17,7 @@ with regular expressions.
 
 This public dataset is hosted in Google BigQuery and is included in BigQuery's 1TB/mo of free tier processing. This 
 means that each user receives 1TB of free BigQuery processing every month, which can be used to run queries on this 
-public dataset. Watch this short video to learn how to get started quickly using BigQuery to access public datasets."
+public dataset. Watch this short video to learn how to get started quickly using BigQuery to access public datasets.
 
 #### Notes
 
