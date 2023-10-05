@@ -39,19 +39,3 @@ Output: Useful data for training machine learning models.
 
 For filtering, perform all operations that can be done by SQL first. Then, whatever are left will be performed by the
 connecting to the GitHub API.
-
-#### Requirements & Tasks:
-
-- [ ] Capable of selecting the N repos in **star_count** and **watch_count.**
-
-  - For examples, top 100 repos in star_count or watch_count.
-
-- [ ] Capable of selecting the repos that have commits within a time period.
-
-  - For examples, having commits during the last year only.
-
-- [ ] Capable of selecting only repos that have file `pom.xml` (build configuration file for the Maven build system)
-
-- [ ] Capable of computing some metrics:
-  - `total_loc` (sum of lines of code in all files)
-  - `test_loc` (sum of lines of code in  test files, i.e., whose file name/path contains the case-insensitive word "test")
