@@ -39,12 +39,12 @@ public class RepoParser {
     }
 
     public Map<String, List<String>> parseTestFiles() throws IOException {
-        List<Path> javaFiles = getFilesMatchingRegex(".*\\.java$");
+        List<Path> javaTestFiles = getFilesMatchingRegex(".*\\.java$");
         return null;
     }
 
     public Map<String, List<String>> parseNonTestFiles() throws IOException {
-        List<Path> javaFiles = getFilesMatchingRegex(".*\\.java$");
+        List<Path> javaNonTestFiles = getFilesMatchingRegex(".*\\.java$");
         return null;
     }
 
@@ -81,11 +81,7 @@ public class RepoParser {
             }
         };
 
-        try {
-            Files.walkFileTree(repoDir, fileVisitor);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        Files.walkFileTree(repoDir, fileVisitor);
 
         return matchingFiles;
     }
@@ -104,17 +100,13 @@ public class RepoParser {
 
     private List<String> parseMethodsInFile(Path javaFile, JavaParser javaParser) throws IOException {
         List<String> methodsList = new ArrayList<>();
+        ParseResult<CompilationUnit> parseResult = javaParser.parse(javaFile);
 
-        try {
-            ParseResult<CompilationUnit> parseResult = javaParser.parse(javaFile);
-            if (parseResult.isSuccessful()) {
-                CompilationUnit cu = parseResult.getResult().get();
-                cu.findAll(MethodDeclaration.class).forEach(method -> methodsList.add(method.getNameAsString()));
-            } else {
-                System.err.println("Error parsing " + repoDir.relativize(javaFile) + ": " + parseResult.getProblems());
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (parseResult.isSuccessful()) {
+            CompilationUnit cu = parseResult.getResult().get();
+            cu.findAll(MethodDeclaration.class).forEach(method -> methodsList.add(method.getNameAsString()));
+        } else {
+            System.err.println("Error parsing " + repoDir.relativize(javaFile) + ": " + parseResult.getProblems());
         }
 
         return methodsList;
