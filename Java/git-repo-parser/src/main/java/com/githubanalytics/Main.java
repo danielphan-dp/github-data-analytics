@@ -21,7 +21,7 @@ public class Main {
         // Parse the repo
         RepoParser repoParser = new RepoParser(repoDir);
         try {
-            Map<String, List<String>> parsingResult = repoParser.parseRepo();
+            Map<String, List<String>> parsingResult = repoParser.parseAllFiles();
             Path outputPath = currentDir.resolve("Data/repos-parsed-code/google_gson/all_methods.json");
             repoParser.saveParsingResult(parsingResult, outputPath);
         } catch (IOException e) {

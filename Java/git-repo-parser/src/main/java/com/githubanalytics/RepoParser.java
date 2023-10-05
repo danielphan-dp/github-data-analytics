@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseResult;
@@ -31,9 +33,19 @@ public class RepoParser {
         this.repoDir = repoDir;
     }
 
-    public Map<String, List<String>> parseRepo() throws IOException {
-        List<Path> javaFiles = getFilesWithExtension(".java");
+    public Map<String, List<String>> parseAllFiles() throws IOException {
+        List<Path> javaFiles = getFilesMatchingRegex(".*\\.java$");
         return parseMethodsInFiles(javaFiles);
+    }
+
+    public Map<String, List<String>> parseTestFiles() throws IOException {
+        List<Path> javaFiles = getFilesMatchingRegex(".*\\.java$");
+        return null;
+    }
+
+    public Map<String, List<String>> parseNonTestFiles() throws IOException {
+        List<Path> javaFiles = getFilesMatchingRegex(".*\\.java$");
+        return null;
     }
 
     public void saveParsingResult(Map<String, List<String>> analysisResult, Path outputPath) throws IOException {
@@ -42,47 +54,57 @@ public class RepoParser {
             Path relativePath = repoDir.relativize(Paths.get(filePath));
             modifiedFileMethodsMap.put("google_json" + "\\" + relativePath.toString(), methods);
         });
+
         String jsonOutput = gson.toJson(modifiedFileMethodsMap);
         Path outputDir = outputPath.getParent();
         if (!Files.exists(outputDir)) {
             Files.createDirectories(outputDir);
         }
+
         try (FileWriter writer = new FileWriter(outputPath.toFile())) {
             writer.write(jsonOutput);
         }
     }
 
-    private List<Path> getFilesWithExtension(String extension) throws IOException {
-        final List<Path> javaFiles = new ArrayList<>();
+    private List<Path> getFilesMatchingRegex(String regex) throws IOException {
+        final List<Path> matchingFiles = new ArrayList<>();
+        final Pattern pattern = Pattern.compile(regex);
+
         FileVisitor<Path> fileVisitor = new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-                if (file.toString().endsWith(extension)) {
-                    javaFiles.add(file);
+                Matcher matcher = pattern.matcher(file.toString());
+                if (matcher.find()) {
+                    matchingFiles.add(file);
                 }
                 return FileVisitResult.CONTINUE;
             }
         };
+
         try {
             Files.walkFileTree(repoDir, fileVisitor);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return javaFiles;
+
+        return matchingFiles;
     }
 
-    private  Map<String, List<String>> parseMethodsInFiles(List<Path> javaFiles) throws IOException {
+    private Map<String, List<String>> parseMethodsInFiles(List<Path> javaFiles) throws IOException {
         Map<String, List<String>> fileMethodsMap = new HashMap<>();
         JavaParser javaParser = new JavaParser();
+
         for (Path javaFile : javaFiles) {
             List<String> methodsList = parseMethodsInFile(javaFile, javaParser);
             fileMethodsMap.put(javaFile.toString(), methodsList);
         }
+
         return fileMethodsMap;
     }
 
     private List<String> parseMethodsInFile(Path javaFile, JavaParser javaParser) throws IOException {
         List<String> methodsList = new ArrayList<>();
+
         try {
             ParseResult<CompilationUnit> parseResult = javaParser.parse(javaFile);
             if (parseResult.isSuccessful()) {
@@ -94,6 +116,7 @@ public class RepoParser {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
         return methodsList;
     }
 }
