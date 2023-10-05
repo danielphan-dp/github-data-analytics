@@ -21,9 +21,22 @@ public class Main {
         // Parse the repo
         RepoParser repoParser = new RepoParser(repoDir);
         try {
-            Map<String, List<String>> parsingResult = repoParser.parseAllFiles();
-            Path outputPath = currentDir.resolve("Data/repos-parsed-code/google_gson/all_methods.json");
-            repoParser.saveParsingResult(parsingResult, outputPath);
+            String targetDir = "Data/repos-parsed-code/google_gson/";
+            Path outputPath = null;
+
+            // TODO: Add functionalities to handle paths.
+            Map<String, List<String>> parsingAllFilesResult = repoParser.parseAllFiles();
+            outputPath = currentDir.resolve(targetDir + "all_files_methods.json");
+            repoParser.saveParsingResult(parsingAllFilesResult, outputPath);
+
+            Map<String, List<String>> parsingTestFilesResult = repoParser.parseTestFiles();
+            outputPath = currentDir.resolve(targetDir + "test_files_methods.json");
+            repoParser.saveParsingResult(parsingTestFilesResult, outputPath);
+
+            Map<String, List<String>> parsingNonTestFilesResult = repoParser.parseNonTestFiles();
+            outputPath = currentDir.resolve(targetDir + "non_test_files_methods.json");
+            repoParser.saveParsingResult(parsingNonTestFilesResult, outputPath);
+
         } catch (IOException e) {
             e.printStackTrace();
         }

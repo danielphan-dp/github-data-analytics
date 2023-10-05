@@ -40,12 +40,13 @@ public class RepoParser {
 
     public Map<String, List<String>> parseTestFiles() throws IOException {
         List<Path> javaTestFiles = getFilesMatchingRegex(".*\\.java$");
-        return null;
+        return parseMethodsInFiles(javaTestFiles);
     }
 
     public Map<String, List<String>> parseNonTestFiles() throws IOException {
         List<Path> javaNonTestFiles = getFilesMatchingRegex(".*\\.java$");
-        return null;
+        javaNonTestFiles.removeIf(file -> file.toString().matches(".*Test.*\\.java$"));
+        return parseMethodsInFiles(javaNonTestFiles);
     }
 
     public void saveParsingResult(Map<String, List<String>> analysisResult, Path outputPath) throws IOException {
@@ -99,6 +100,8 @@ public class RepoParser {
     }
 
     private List<String> parseMethodsInFile(Path javaFile, JavaParser javaParser) throws IOException {
+        // TODO: Add more logic here to capture more information.
+
         List<String> methodsList = new ArrayList<>();
         ParseResult<CompilationUnit> parseResult = javaParser.parse(javaFile);
 
