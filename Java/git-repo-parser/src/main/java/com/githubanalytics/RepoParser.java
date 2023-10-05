@@ -33,24 +33,24 @@ public class RepoParser {
         this.repoDir = repoDir;
     }
 
-    public Map<String, List<String>> parseAllFiles() throws IOException {
+    public Map<String, Map<String, String>> parseAllFiles() throws IOException {
         List<Path> javaFiles = getFilesMatchingRegex(".*\\.java$");
         return parseMethodsInFiles(javaFiles);
     }
 
-    public Map<String, List<String>> parseTestFiles() throws IOException {
+    public Map<String, Map<String, String>> parseTestFiles() throws IOException {
         List<Path> javaTestFiles = getFilesMatchingRegex(".*\\.java$");
         return parseMethodsInFiles(javaTestFiles);
     }
 
-    public Map<String, List<String>> parseNonTestFiles() throws IOException {
+    public Map<String, Map<String, String>> parseNonTestFiles() throws IOException {
         List<Path> javaNonTestFiles = getFilesMatchingRegex(".*\\.java$");
         javaNonTestFiles.removeIf(file -> file.toString().matches(".*Test.*\\.java$"));
         return parseMethodsInFiles(javaNonTestFiles);
     }
 
-    public void saveParsingResult(Map<String, List<String>> analysisResult, Path outputPath) throws IOException {
-        Map<String, List<String>> modifiedFileMethodsMap = new HashMap<>();
+    public void saveParsingResult(Map<String, Map<String, String>> analysisResult, Path outputPath) throws IOException {
+        Map<String, Map<String, String>> modifiedFileMethodsMap = new HashMap<>();
         analysisResult.forEach((filePath, methods) -> {
             Path relativePath = repoDir.relativize(Paths.get(filePath));
             modifiedFileMethodsMap.put("google_json" + "\\" + relativePath.toString(), methods);
@@ -87,31 +87,39 @@ public class RepoParser {
         return matchingFiles;
     }
 
-    private Map<String, List<String>> parseMethodsInFiles(List<Path> javaFiles) throws IOException {
-        Map<String, List<String>> fileMethodsMap = new HashMap<>();
+    private Map<String, Map<String, String>> parseMethodsInFiles(List<Path> javaFiles) throws IOException {
+        Map<String, Map<String, String>> fileMethodsMap = new HashMap<>();
         JavaParser javaParser = new JavaParser();
 
         for (Path javaFile : javaFiles) {
-            List<String> methodsList = parseMethodsInFile(javaFile, javaParser);
-            fileMethodsMap.put(javaFile.toString(), methodsList);
+            Map<String, String> methodsMap = parseMethodsInFile(javaFile, javaParser);
+            fileMethodsMap.put(javaFile.toString(), methodsMap);
         }
 
         return fileMethodsMap;
     }
 
-    private List<String> parseMethodsInFile(Path javaFile, JavaParser javaParser) throws IOException {
+    private Map<String, String> parseMethodsInFile(Path javaFile, JavaParser javaParser) throws IOException {
         // TODO: Add more logic here to capture more information.
 
-        List<String> methodsList = new ArrayList<>();
+        Map<String, String> methodsMap = new HashMap<>();
         ParseResult<CompilationUnit> parseResult = javaParser.parse(javaFile);
 
         if (parseResult.isSuccessful()) {
-            CompilationUnit cu = parseResult.getResult().get();
-            cu.findAll(MethodDeclaration.class).forEach(method -> methodsList.add(method.getNameAsString()));
+            CompilationUnit compilationUnit = parseResult.getResult().get();
+            compilationUnit
+                    .findAll(MethodDeclaration.class)
+                    .forEach(method -> {
+                        String methodName = method.getNameAsString();
+                        method.getBody().ifPresent(body -> {
+                            String methodBody = body.toString();
+                            methodsMap.put(methodName, methodBody);
+                        });
+                    });
         } else {
             System.err.println("Error parsing " + repoDir.relativize(javaFile) + ": " + parseResult.getProblems());
         }
 
-        return methodsList;
+        return methodsMap;
     }
 }

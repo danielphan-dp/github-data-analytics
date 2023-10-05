@@ -25,15 +25,15 @@ public class Main {
             Path outputPath = null;
 
             // TODO: Add functionalities to handle paths.
-            Map<String, List<String>> parsingAllFilesResult = repoParser.parseAllFiles();
+            Map<String, Map<String, String>> parsingAllFilesResult = repoParser.parseAllFiles();
             outputPath = currentDir.resolve(targetDir + "all_files_methods.json");
             repoParser.saveParsingResult(parsingAllFilesResult, outputPath);
 
-            Map<String, List<String>> parsingTestFilesResult = repoParser.parseTestFiles();
+            Map<String, Map<String, String>> parsingTestFilesResult = repoParser.parseTestFiles();
             outputPath = currentDir.resolve(targetDir + "test_files_methods.json");
             repoParser.saveParsingResult(parsingTestFilesResult, outputPath);
 
-            Map<String, List<String>> parsingNonTestFilesResult = repoParser.parseNonTestFiles();
+            Map<String, Map<String, String>> parsingNonTestFilesResult = repoParser.parseNonTestFiles();
             outputPath = currentDir.resolve(targetDir + "non_test_files_methods.json");
             repoParser.saveParsingResult(parsingNonTestFilesResult, outputPath);
 
