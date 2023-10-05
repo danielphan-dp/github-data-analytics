@@ -13,6 +13,11 @@
   - Add some tests.
   - Make classes for modular for maintenance.
 
+- Design and implement logic for parsing out (code, test) pairs
+  - Input: Git Repo OR (non_test_methods.json, test_methods.json)
+  - Output: (code, test) pairs.
+  - Mechanism for detecting scheme that was used (most straightforward: naming + folder structure).
+
 
 Notes:
   - Make sure to use Python <= 3.11
