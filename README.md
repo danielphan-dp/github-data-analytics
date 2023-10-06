@@ -38,3 +38,11 @@ Output: Useful data for training machine learning models.
 
 For filtering, perform all operations that can be done by SQL first. Then, whatever are left will be performed by the
 connecting to the GitHub API.
+
+
+#### Set Up
+1. Set up Google BigQuery.
+   - Set up Google account (if applicable)
+   - Set up credentials.
+
+[Add documentation here]

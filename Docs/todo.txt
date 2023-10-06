@@ -6,12 +6,15 @@
   - Extract the number of lines of Java tests (test_loc) and Java code (total_loc), try Python lib "glob"
     - Test files: have "test" in the path (non-case-sensitive)
 
+
 - Take a look at Seutil
+
 
 - Code Refactoring
   - Add more proper interfaces when interacting with downloaded repos.
   - Add some tests.
   - Make classes for modular for maintenance.
+
 
 - Design and implement logic for parsing out (code, test) pairs
   - Input: Git Repo OR (non_test_methods.json, test_methods.json)
@@ -24,3 +27,16 @@ Notes:
     - Seems like Python 3.12 is not widely supported yet by external libs. [Got Errors]
   - Current repos for sampling:
     - https://github.com/google/gson (100% Java)
+
+
+Some models to consider:
+  - CodeLlama (Meta)
+  - Check if someone have used A6000 to train CodeLlama
+
+Access the remote machine and figure out some metadata.
+
+Backlog of important tasks:
+  - Mapping between code and test
+    - Name convention: MethodA -> TestMethodA, MethodATest
+    - Annotation -> ...
+  -
