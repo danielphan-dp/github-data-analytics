@@ -29,14 +29,13 @@ Notes:
     - https://github.com/google/gson (100% Java)
 
 
-Some models to consider:
-  - CodeLlama (Meta)
-  - Check if someone have used A6000 to train CodeLlama
-
-Access the remote machine and figure out some metadata.
 
 Backlog of important tasks:
-  - Mapping between code and test
+  - Take a look at CodeLlama (Meta), Check if someone have used A6000 to train CodeLlama
+  - Access the remote machine and figure out some metadata
+    - Make sure everything is working. Make sure the code runs on the remote machine
+  - Mapping between code and test [IMPORTANT]
     - Name convention: MethodA -> TestMethodA, MethodATest
     - Annotation -> ...
-  -
+    - Capture the entire signature of the function + all annotation
+
