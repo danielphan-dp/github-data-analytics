@@ -26,7 +26,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 
-
 public class RepoParser {
     private final Path repoDir;
     private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
@@ -111,6 +110,8 @@ public class RepoParser {
             CompilationUnit compilationUnit = parseResult.getResult().get();
             compilationUnit
                     .findAll(MethodDeclaration.class)
+                    .stream()
+                    .filter(method -> method.getAnnotationByName("org.junit.Test").isPresent())
                     .forEach(method -> {
                         Map<String, String> methodDetails = new HashMap<>();
                         methodDetails.put("method_name", method.getNameAsString());
