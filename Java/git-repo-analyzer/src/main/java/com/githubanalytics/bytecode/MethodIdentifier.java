@@ -1,4 +1,4 @@
-package com.githubanalytics.bytecode_parsers.callgraph;
+package com.githubanalytics.bytecode;
 
 import java.util.List;
 import java.util.Objects;

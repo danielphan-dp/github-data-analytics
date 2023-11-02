@@ -1,4 +1,4 @@
-package com.githubanalytics.bytecode_parsers.callgraph;
+package com.githubanalytics.bytecode;
 
 import org.objectweb.asm.*;
 import java.io.*;

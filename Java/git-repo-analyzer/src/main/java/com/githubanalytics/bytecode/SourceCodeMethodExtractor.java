@@ -1,4 +1,4 @@
-package com.githubanalytics.bytecode_parsers.callgraph;
+package com.githubanalytics.bytecode;
 
 import com.github.javaparser.*;
 import com.github.javaparser.ast.*;
@@ -11,11 +11,10 @@ import java.io.*;
 import java.util.*;
 
 public class SourceCodeMethodExtractor {
-    private final List<MethodIdentifier> methods = new ArrayList<>();
+    private final List<Map<String, Object>> methods = new ArrayList<>();
     private final Set<String> classNames = new HashSet<>();
 
     static {
-        // Configure JavaParser to use Java 17 (Working for google/gson)
         ParserConfiguration configuration = new ParserConfiguration()
                 .setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_17);
         StaticJavaParser.setConfiguration(configuration);
@@ -23,6 +22,10 @@ public class SourceCodeMethodExtractor {
 
     public void analyzeDirectoryForMethods(String rootDir) {
         processDirectory(new File(rootDir));
+    }
+
+    public List<Map<String, Object>> getMethodsSource() {
+        return this.methods;
     }
 
     private void processDirectory(File dir) {
@@ -49,21 +52,22 @@ public class SourceCodeMethodExtractor {
                     super.visit(n, arg);
                     String className = getClassName(n);
                     String methodName = n.getNameAsString();
-                    String returnType = n.getType().asString();
+                    String returnType = n.getType().toString();
                     List<String> paramTypes = new ArrayList<>();
                     for (Parameter param : n.getParameters()) {
-                        paramTypes.add(param.getType().asString());
+                        paramTypes.add(param.getType().toString());
                     }
-                    MethodIdentifier methodId = new MethodIdentifier(className, methodName, paramTypes, returnType);
-                    methods.add(methodId);
-                    classNames.add(className);
+                    String methodSource = n.toString();
+                    Map<String, Object> methodMap = new HashMap<>();
+                    methodMap.put("methodIdentifier", new MethodIdentifier(className, methodName, paramTypes, returnType));
+                    methodMap.put("sourceCode", methodSource);
+                    methods.add(methodMap);
                 }
             }, null);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-
 
     private String getClassName(Node node) {
         if (node instanceof ClassOrInterfaceDeclaration) {
@@ -85,9 +89,11 @@ public class SourceCodeMethodExtractor {
 
     public void printAnalysisSummary() {
         long totalMethodCount = methods.size();
-        long uniqueMethodCount = methods.stream().distinct().count();
+        long uniqueMethodCount = methods.stream().map(Map::values).distinct().count();
         long duplicateMethodCount = totalMethodCount - uniqueMethodCount;
-        long totalParamCount = methods.stream().mapToInt(method -> method.getParameterTypes().size()).sum();
+        long totalParamCount = methods.stream()
+                .mapToInt(method -> ((MethodIdentifier)method.get("methodIdentifier")).getParameterTypes().size())
+                .sum();
         double avgParamPerMethod = methods.isEmpty() ? 0 : (double) totalParamCount / totalMethodCount;
         double avgMethodsPerClass = classNames.isEmpty() ? 0 : (double) totalMethodCount / classNames.size();
 
@@ -103,7 +109,8 @@ public class SourceCodeMethodExtractor {
         Set<MethodIdentifier> uniqueMethods = new HashSet<>();
         List<MethodIdentifier> duplicateMethods = new ArrayList<>();
 
-        for (MethodIdentifier method : methods) {
+        for (Map<String, Object> methodDetail : methods) {
+            MethodIdentifier method = (MethodIdentifier) methodDetail.get("methodIdentifier");
             if (!uniqueMethods.add(method)) {
                 duplicateMethods.add(method);
             }
@@ -130,5 +137,9 @@ public class SourceCodeMethodExtractor {
         extractor.exportMethodsToJson(args[1]);
         extractor.printAnalysisSummary();
         extractor.printDuplicateMethods();
+    }
+
+    public List<Map<String, Object>> getMethods() {
+        return this.methods;
     }
 }
