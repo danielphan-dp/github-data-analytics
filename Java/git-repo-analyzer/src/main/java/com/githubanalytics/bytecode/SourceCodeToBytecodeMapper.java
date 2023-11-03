@@ -14,6 +14,8 @@ import java.util.Map;
 
 public class SourceCodeToBytecodeMapper {
     public static List<Map<String, Object>> map(List<Map<String, Object>> scMethods, List<Map<String, Object>> bcMethods) {
+        // TODO: Optimize this.
+
         List<Map<String, Object>> matches = new ArrayList<>();
         for (Map<String, Object> scm : scMethods) {
             for (Map<String, Object> bcm : bcMethods) {
