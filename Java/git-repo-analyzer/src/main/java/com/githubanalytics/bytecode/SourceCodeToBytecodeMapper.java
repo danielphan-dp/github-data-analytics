@@ -34,7 +34,7 @@ public class SourceCodeToBytecodeMapper {
             }
         }
 
-        System.out.println(matches.size());
+//        System.out.println(matches.size());
 
         return matches;
     }
@@ -63,7 +63,7 @@ public class SourceCodeToBytecodeMapper {
             }
         }
 
-        System.out.println(matches.size());
+//        System.out.println(matches.size());
 
         return matches;
     }
@@ -113,12 +113,12 @@ public class SourceCodeToBytecodeMapper {
         // Analyze source code
         SourceCodeMethodExtractor sourceCodeMethodExtractor = new SourceCodeMethodExtractor();
         sourceCodeMethodExtractor.analyzeDirectoryForMethods(sourceCodePath);
-//        sourceCodeMethodExtractor.exportMethodsToJson(outputPath + "/methods_sc.json");
+        // sourceCodeMethodExtractor.exportMethodsToJson(outputPath + "/methods_sc.json");
 
         // Analyze byte code
         BytecodeMethodExtractor bytecodeMethodExtractor = new BytecodeMethodExtractor();
         bytecodeMethodExtractor.analyzeDirectoryForMethods(bytecodePath);
-//        bytecodeMethodExtractor.exportMethodsToJson(outputPath + "/methods_bc.json");
+        // bytecodeMethodExtractor.exportMethodsToJson(outputPath + "/methods_bc.json");
 
         // Get methods
         List<Map<String, Object>> scMethods = sourceCodeMethodExtractor.getMethods();
@@ -130,7 +130,9 @@ public class SourceCodeToBytecodeMapper {
 
         // Compute matching
         writeListMapToJsonFile(inner_join(scMethods, bcMethods), outputPath + "/mapped_methods.json");
-        writeListMapToJsonFile(left_join(scMethods, bcMethods), outputPath + "/in_sc____not_in_bc.json____LEFT_JOIN.json");
+        writeListMapToJsonFile(left_join(scMethods, bcMethods), outputPath + "/in_sc____notin_bc.json____LEFT_JOIN.json");
         writeListMapToJsonFile(right_join(scMethods, bcMethods), outputPath + "/notin_sc____in_bc.json____RIGHT_JOIN.json");
+
+        // TODO: Check elements that are in check if there are matching in left_join and right_join sets.
     }
 }

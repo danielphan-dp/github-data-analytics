@@ -58,9 +58,20 @@ public class MethodIdentifier {
                 that.methodName
         );
 
-        boolean returnTypeMatch = Objects.equals(
-                this.returnType.replace('$', '.'),
-                that.returnType.replace('$', '.'));
+        // TODO: More logic to add here. At the moment, only short-handed type are used.
+        boolean returnTypeMatch = true;
+        if (classNameMatch && methodNameMatch) {
+            String[] ta1 = this.returnType.replace("$", ".").split("\\.");
+            String[] ta2 = that.returnType.replace("$", ".").split("\\.");
+            String rt1 = ta1[ta1.length - 1];
+            String rt2 = ta2[ta2.length - 1];
+
+            if (!Objects.equals(rt1, rt2)) {
+                returnTypeMatch = false;
+            }
+        } else {
+            returnTypeMatch = false;
+        }
 
         // TODO: More logic to add here. At the moment, only short-handed type are used.
         boolean parameterTypesMatch = true;
@@ -74,7 +85,7 @@ public class MethodIdentifier {
                 String thatSimplifiedType = ta2[ta2.length - 1];
                 if (!Objects.equals(thisSimplifiedType, thatSimplifiedType)) {
                     // DEBUG
-                    System.out.println("Type Not equal: " + thisSimplifiedType + " " + thatSimplifiedType);
+//                    System.out.println("Type Not equal: " + thisSimplifiedType + " " + thatSimplifiedType);
 
                     parameterTypesMatch = false;
                 }
@@ -82,6 +93,10 @@ public class MethodIdentifier {
                 // TODO: Handle edge cases here. Compile a white list.
                 // if (Objects.equals(thisSimplifiedType, "T") && Objects.equals(thatSimplifiedType, "Object")) parameterTypesMatch = true;
                 // if (Objects.equals(thatSimplifiedType, "T") && Objects.equals(thisSimplifiedType, "Object")) parameterTypesMatch = true;
+
+                // TODO: More check.
+                // If everything is matched until this point. And returnType is "java.lang.Object"
+                // give this case the "benefit of the doubt".
             }
         } else {
             parameterTypesMatch = false;
