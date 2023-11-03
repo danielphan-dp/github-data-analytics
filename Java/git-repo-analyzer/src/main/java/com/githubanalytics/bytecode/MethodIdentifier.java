@@ -45,6 +45,7 @@ public class MethodIdentifier {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof MethodIdentifier)) return false;
+
         MethodIdentifier that = (MethodIdentifier) o;
 
         boolean classNameMatch = Objects.equals(
@@ -52,13 +53,16 @@ public class MethodIdentifier {
                 that.className.replace('$', '.')
         );
 
-        boolean methodNameMatch = Objects.equals(methodName, that.methodName);
+        boolean methodNameMatch = Objects.equals(
+                this.methodName,
+                that.methodName
+        );
 
         boolean returnTypeMatch = Objects.equals(
                 this.returnType.replace('$', '.'),
                 that.returnType.replace('$', '.'));
 
-        // TODO: More logic to add here.
+        // TODO: More logic to add here. At the moment, only short-handed type are used.
         boolean parameterTypesMatch = true;
         if (classNameMatch && methodNameMatch && returnTypeMatch &&
                 this.parameterTypes.size() == that.parameterTypes.size()) {
@@ -69,9 +73,15 @@ public class MethodIdentifier {
                 String thisSimplifiedType = ta1[ta1.length - 1];
                 String thatSimplifiedType = ta2[ta2.length - 1];
                 if (!Objects.equals(thisSimplifiedType, thatSimplifiedType)) {
+                    // DEBUG
                     System.out.println("Type Not equal: " + thisSimplifiedType + " " + thatSimplifiedType);
+
                     parameterTypesMatch = false;
                 }
+
+                // TODO: Handle edge cases here. Compile a white list.
+                // if (Objects.equals(thisSimplifiedType, "T") && Objects.equals(thatSimplifiedType, "Object")) parameterTypesMatch = true;
+                // if (Objects.equals(thatSimplifiedType, "T") && Objects.equals(thisSimplifiedType, "Object")) parameterTypesMatch = true;
             }
         } else {
             parameterTypesMatch = false;

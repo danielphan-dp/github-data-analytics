@@ -7,13 +7,22 @@ import org.checkerframework.checker.units.qual.A;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class SourceCodeToBytecodeMapper {
-    public static List<Map<String, Object>> map(List<Map<String, Object>> scMethods, List<Map<String, Object>> bcMethods) {
+    public static List<Map<String, Object>> left_join(List<Map<String, Object>> scMethods, List<Map<String, Object>> bcMethods) {
+        // TODO: Optimize this.
+
+        return new ArrayList<>();
+    }
+
+    public static List<Map<String, Object>> right_join(List<Map<String, Object>> scMethods, List<Map<String, Object>> bcMethods) {
+        // TODO: Optimize this.
+
+        return new ArrayList<>();
+    }
+
+    public static List<Map<String, Object>> inner_join(List<Map<String, Object>> scMethods, List<Map<String, Object>> bcMethods) {
         // TODO: Optimize this.
 
         List<Map<String, Object>> matches = new ArrayList<>();
@@ -26,7 +35,7 @@ public class SourceCodeToBytecodeMapper {
                     Map<String, Object> entry = new HashMap<>();
                     entry.put("methodIdentifier", bcmId);
                     entry.put("sourceCode", scm.get("sourceCode"));
-                    entry.put("bytecode", scm.get("bytecode"));
+                    entry.put("bytecode", bcm.get("bytecode"));
 
                     // Add the entry to result.
                     matches.add(entry);
@@ -58,12 +67,12 @@ public class SourceCodeToBytecodeMapper {
         // Analyze source code
         SourceCodeMethodExtractor sourceCodeMethodExtractor = new SourceCodeMethodExtractor();
         sourceCodeMethodExtractor.analyzeDirectoryForMethods(sourceCodePath);
-        sourceCodeMethodExtractor.exportMethodsToJson(outputPath + "/methods_sc.json");
+//        sourceCodeMethodExtractor.exportMethodsToJson(outputPath + "/methods_sc.json");
 
         // Analyze byte code
         BytecodeMethodExtractor bytecodeMethodExtractor = new BytecodeMethodExtractor();
         bytecodeMethodExtractor.analyzeDirectoryForMethods(bytecodePath);
-        bytecodeMethodExtractor.exportMethodsToJson(outputPath + "/methods_bc.json");
+//        bytecodeMethodExtractor.exportMethodsToJson(outputPath + "/methods_bc.json");
 
         // Get methods
         List<Map<String, Object>> scMethods = sourceCodeMethodExtractor.getMethods();
@@ -74,7 +83,7 @@ public class SourceCodeToBytecodeMapper {
         // writeListMapToJsonFile(bcMethods, outputPath + "/db_methods_bc.json");
 
         // Compute matching
-        List<Map<String, Object>> result = map(scMethods, bcMethods);
+        List<Map<String, Object>> result = inner_join(scMethods, bcMethods);
         writeListMapToJsonFile(result, outputPath + "/mapped_methods.json");
     }
 }
