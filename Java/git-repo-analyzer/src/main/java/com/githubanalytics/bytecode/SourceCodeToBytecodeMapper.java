@@ -34,7 +34,7 @@ public class SourceCodeToBytecodeMapper {
             }
         }
 
-//        System.out.println(matches.size());
+        System.out.println("Samples in SC not in BC: " + matches.size());
 
         return matches;
     }
@@ -63,7 +63,7 @@ public class SourceCodeToBytecodeMapper {
             }
         }
 
-//        System.out.println(matches.size());
+        System.out.println("Samples in BC not in SC: " + matches.size());
 
         return matches;
     }
@@ -92,10 +92,11 @@ public class SourceCodeToBytecodeMapper {
             }
         }
 
-        System.out.println(matches.size());
+        System.out.println("Match count: " + (matches.size()));
 
         return matches;
     }
+
     public static void writeListMapToJsonFile(List<Map<String, Object>> list, String filePath) {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         try (Writer writer = new FileWriter(filePath)) {
@@ -128,11 +129,31 @@ public class SourceCodeToBytecodeMapper {
         // writeListMapToJsonFile(scMethods, outputPath + "/db_methods_sc.json");
         // writeListMapToJsonFile(bcMethods, outputPath + "/db_methods_bc.json");
 
+
+        System.out.println("PRE CALCULATIONS");
+        System.out.println(scMethods.size());
+        System.out.println(bcMethods.size());
+
+
+        System.out.println("\nPOST CALCULATIONS");
+
         // Compute matching
-        writeListMapToJsonFile(inner_join(scMethods, bcMethods), outputPath + "/mapped_methods.json");
-        writeListMapToJsonFile(left_join(scMethods, bcMethods), outputPath + "/in_sc____notin_bc.json____LEFT_JOIN.json");
-        writeListMapToJsonFile(right_join(scMethods, bcMethods), outputPath + "/notin_sc____in_bc.json____RIGHT_JOIN.json");
+        List<Map<String, Object>> ij = inner_join(scMethods, bcMethods);
+        List<Map<String, Object>> lj = left_join(scMethods, bcMethods);
+        List<Map<String, Object>> rj = right_join(scMethods, bcMethods);
+        
+        writeListMapToJsonFile(ij, outputPath + "/mapped_methods.json");
+        writeListMapToJsonFile(lj, outputPath + "/in_sc____notin_bc.json____LEFT_JOIN.json");
+        writeListMapToJsonFile(rj, outputPath + "/notin_sc____in_bc.json____RIGHT_JOIN.json");
+
+        System.out.println("Source code match rate: " + (ij.size() * 100 / scMethods.size()) + "%");
 
         // TODO: Check elements that are in check if there are matching in left_join and right_join sets.
+
+        // Checks, if there are mismatches here, the equals operator is likely not correct.
+        System.out.println("\nCHECKS");
+        System.out.println(scMethods.size() + bcMethods.size());
+        System.out.println(ij.size() * 2 + lj.size() + rj.size());
+        System.out.println(scMethods.size() + bcMethods.size() == ij.size() * 2 + lj.size() + rj.size());
     }
 }

@@ -69,6 +69,7 @@ public class MethodIdentifier {
             if (!Objects.equals(rt1, rt2)) {
                 returnTypeMatch = false;
             }
+
         } else {
             returnTypeMatch = false;
         }
@@ -101,6 +102,14 @@ public class MethodIdentifier {
         } else {
             parameterTypesMatch = false;
         }
+
+        // EDGE CASES
+        // Edge case 1
+        if (classNameMatch && methodNameMatch && parameterTypesMatch)
+            // At this point, benefit of the doubt can be given.
+            if (Objects.equals(this.returnType, "java.lang.Object") || Objects.equals(that.returnType, "java.lang.Object")) {
+                returnTypeMatch = true;
+            }
 
         return classNameMatch &&
                 methodNameMatch &&
