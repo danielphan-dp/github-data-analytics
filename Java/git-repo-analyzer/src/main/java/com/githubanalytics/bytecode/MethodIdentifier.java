@@ -9,7 +9,11 @@ public class MethodIdentifier {
     private final List<String> parameterTypes;
     private final String returnType;
 
-    public MethodIdentifier(String className, String methodName, List<String> parameterTypes, String returnType) {
+    public MethodIdentifier(
+            String className,
+            String methodName,
+            List<String> parameterTypes,
+            String returnType) {
         this.className = className;
         this.methodName = methodName;
         this.parameterTypes = parameterTypes;
@@ -42,10 +46,41 @@ public class MethodIdentifier {
         if (this == o) return true;
         if (!(o instanceof MethodIdentifier)) return false;
         MethodIdentifier that = (MethodIdentifier) o;
-        return Objects.equals(className, that.className) &&
-                Objects.equals(methodName, that.methodName) &&
-                Objects.equals(parameterTypes, that.parameterTypes) &&
-                Objects.equals(returnType, that.returnType);
+
+        boolean classNameMatch = Objects.equals(
+                this.className.replace('$', '.'),
+                that.className.replace('$', '.')
+        );
+
+        boolean methodNameMatch = Objects.equals(methodName, that.methodName);
+
+        boolean returnTypeMatch = Objects.equals(
+                this.returnType.replace('$', '.'),
+                that.returnType.replace('$', '.'));
+
+        // TODO: More logic to add here.
+        boolean parameterTypesMatch = true;
+        if (classNameMatch && methodNameMatch && returnTypeMatch &&
+                this.parameterTypes.size() == that.parameterTypes.size()) {
+            int s = this.parameterTypes.size();
+            for (int i = 0; i < s; ++i) {
+                String[] ta1 = this.parameterTypes.get(i).replace("$", ".").split("\\.");
+                String[] ta2 = that.parameterTypes.get(i).replace("$", ".").split("\\.");
+                String thisSimplifiedType = ta1[ta1.length - 1];
+                String thatSimplifiedType = ta2[ta2.length - 1];
+                if (!Objects.equals(thisSimplifiedType, thatSimplifiedType)) {
+                    System.out.println("Type Not equal: " + thisSimplifiedType + " " + thatSimplifiedType);
+                    parameterTypesMatch = false;
+                }
+            }
+        } else {
+            parameterTypesMatch = false;
+        }
+
+        return classNameMatch &&
+                methodNameMatch &&
+                returnTypeMatch &&
+                parameterTypesMatch;
     }
 
     @Override

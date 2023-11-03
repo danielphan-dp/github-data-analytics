@@ -1,21 +1,13 @@
 package com.githubanalytics.bytecode;
 
 import org.objectweb.asm.*;
-
 import java.io.*;
 import java.util.*;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 public class BytecodeMethodExtractor {
-    private final List<MethodIdentifier> methods = new ArrayList<>();
-    private final Set<String> classNames = new HashSet<>();
-    private final Map<MethodIdentifier, String> methodBytecodes = new HashMap<>();
-
-    public Map<MethodIdentifier, String> getMethodsBytecode() {
-        return this.methodBytecodes;
-    }
+    private final List<Map<String, Object>> methods = new ArrayList<>();
 
     private class CustomClassVisitor extends ClassVisitor {
         private final String className;
@@ -23,27 +15,31 @@ public class BytecodeMethodExtractor {
         CustomClassVisitor(String className) {
             super(Opcodes.ASM9);
             this.className = className;
-            classNames.add(className);
         }
 
         @Override
         public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
-            MethodIdentifier methodId = new MethodIdentifier(
+            Map<String, Object> methodMap = new HashMap<>();
+            methodMap.put("methodIdentifier", new MethodIdentifier(
                     className, name, convertTypesToStringList(Type.getArgumentTypes(descriptor)),
                     Type.getReturnType(descriptor).getClassName()
-            );
-            methods.add(methodId);
-            return new CustomMethodVisitor(methodId, super.visitMethod(access, name, descriptor, signature, exceptions));
+            ));
+            methods.add(methodMap);
+            return new CustomMethodVisitor(methodMap, super.visitMethod(access, name, descriptor, signature, exceptions));
         }
     }
 
+    public List<Map<String, Object>> getMethods() {
+        return this.methods;
+    }
+
     private class CustomMethodVisitor extends MethodVisitor {
-        private final MethodIdentifier methodId;
+        private final Map<String, Object> methodMap;
         private final StringBuilder bytecode = new StringBuilder();
 
-        public CustomMethodVisitor(MethodIdentifier methodId, MethodVisitor mv) {
+        public CustomMethodVisitor(Map<String, Object> methodMap, MethodVisitor mv) {
             super(Opcodes.ASM9, mv);
-            this.methodId = methodId;
+            this.methodMap = methodMap;
         }
 
         @Override
@@ -54,7 +50,7 @@ public class BytecodeMethodExtractor {
 
         @Override
         public void visitEnd() {
-            methodBytecodes.put(methodId, bytecode.toString());
+            methodMap.put("bytecode", bytecode.toString());
             super.visitEnd();
         }
     }
@@ -99,44 +95,30 @@ public class BytecodeMethodExtractor {
     public void exportMethodsToJson(String filename) {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         try (Writer writer = new FileWriter(filename)) {
-            List<Map<String, Object>> methodInfo = new ArrayList<>();
-            for (MethodIdentifier methodId : methods) {
-                Map<String, Object> methodDetails = new HashMap<>();
-                methodDetails.put("className", methodId.getClassName());
-                methodDetails.put("methodName", methodId.getMethodName());
-                methodDetails.put("parameterTypes", methodId.getParameterTypes());
-                methodDetails.put("returnType", methodId.getReturnType());
-
-                Map<String, Object> methodEntry = new HashMap<>();
-                methodEntry.put("methodIdentifier", methodDetails);
-                methodEntry.put("bytecode", methodBytecodes.get(methodId));  // Moved bytecode outside methodIdentifier
-                methodInfo.add(methodEntry);
-            }
-            gson.toJson(methodInfo, writer);
+            gson.toJson(methods, writer);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-
     public void printAnalysisSummary() {
         long totalMethodCount = methods.size();
-        long uniqueMethodCount = methods.stream().distinct().count();
+        long uniqueMethodCount = methods.stream().map(m -> m.get("methodIdentifier")).distinct().count();
         long duplicateMethodCount = totalMethodCount - uniqueMethodCount;
 
         System.out.println("Methods (total): " + totalMethodCount);
         System.out.println("Methods (unique): " + uniqueMethodCount);
         System.out.println("Methods (duplicated): " + duplicateMethodCount);
-        System.out.println("Classes processed: " + classNames.size());
     }
 
     public void printDuplicateMethods() {
-        Set<MethodIdentifier> uniqueMethods = new HashSet<>();
-        List<MethodIdentifier> duplicateMethods = new ArrayList<>();
+        Set<Object> uniqueMethodIdentifiers = new HashSet<>();
+        List<Object> duplicateMethods = new ArrayList<>();
 
-        for (MethodIdentifier method : methods) {
-            if (!uniqueMethods.add(method)) {
-                duplicateMethods.add(method);
+        for (Map<String, Object> methodDetail : methods) {
+            Object methodIdentifier = methodDetail.get("methodIdentifier");
+            if (!uniqueMethodIdentifiers.add(methodIdentifier)) {
+                duplicateMethods.add(methodIdentifier);
             }
         }
 
@@ -144,7 +126,7 @@ public class BytecodeMethodExtractor {
             System.out.println("No duplicates found.");
         } else {
             System.out.println("Duplicate methods found:");
-            for (MethodIdentifier duplicate : duplicateMethods) {
+            for (Object duplicate : duplicateMethods) {
                 System.out.println(duplicate);
             }
         }
@@ -155,6 +137,7 @@ public class BytecodeMethodExtractor {
             System.err.println("Usage: java BytecodeMethodExtractor <root directory of class files> <output JSON file>");
             System.exit(1);
         }
+
         BytecodeMethodExtractor extractor = new BytecodeMethodExtractor();
         extractor.analyzeDirectoryForMethods(args[0]);
         extractor.exportMethodsToJson(args[1]);

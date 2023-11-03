@@ -2,92 +2,77 @@ package com.githubanalytics.bytecode;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonNull;
+import org.checkerframework.checker.units.qual.A;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class SourceCodeToBytecodeMapper {
-    public void mapMethodsAndExportToJson(List<Map<String, Object>> sourceMethods, Map<MethodIdentifier, String> bytecodeMap, String outputPath) throws IOException {
-        Map<MethodIdentifier, String> sourceCodeMap = new HashMap<>();
+    public static List<Map<String, Object>> map(List<Map<String, Object>> scMethods, List<Map<String, Object>> bcMethods) {
+        List<Map<String, Object>> matches = new ArrayList<>();
+        for (Map<String, Object> scm : scMethods) {
+            for (Map<String, Object> bcm : bcMethods) {
+                MethodIdentifier scmId = (MethodIdentifier) scm.get("methodIdentifier");
+                MethodIdentifier bcmId = (MethodIdentifier) bcm.get("methodIdentifier");
+                if (scmId.equals(bcmId)) {
+                    // Create a new entry.
+                    Map<String, Object> entry = new HashMap<>();
+                    entry.put("methodIdentifier", bcmId);
+                    entry.put("sourceCode", scm.get("sourceCode"));
+                    entry.put("bytecode", scm.get("bytecode"));
 
-        // Extracting source code
-        for (Map<String, Object> methodMap : sourceMethods) {
-            MethodIdentifier id = (MethodIdentifier) methodMap.get("methodIdentifier");
-            String sourceCode = (String) methodMap.get("sourceCode");
-            sourceCodeMap.put(id, sourceCode);
-        }
+                    // Add the entry to result.
+                    matches.add(entry);
 
-        // Sets for categorized methods
-        Set<MethodIdentifier> exclusiveToBytecode = new HashSet<>(bytecodeMap.keySet());
-        Set<MethodIdentifier> exclusiveToSource = new HashSet<>(sourceCodeMap.keySet());
-        Set<MethodIdentifier> commonMethods = new HashSet<>();
-
-        // Categorize methods
-        for (MethodIdentifier id : sourceCodeMap.keySet()) {
-            if (bytecodeMap.containsKey(id)) {
-                commonMethods.add(id);
-                exclusiveToBytecode.remove(id);
-                exclusiveToSource.remove(id);
+                    // Break (does not need this is keys are unique).
+                    break;
+                }
             }
         }
 
-        // Creating JSON objects for each category
-        List<Map<String, Object>> common = commonMethods.stream()
-                .map(id -> createMethodMap(id, bytecodeMap.get(id), sourceCodeMap.get(id)))
-                .collect(Collectors.toList());
+        System.out.println(matches.size());
 
-        List<Map<String, Object>> bytecodeExclusive = exclusiveToBytecode.stream()
-                .map(id -> createMethodMap(id, bytecodeMap.get(id), null))
-                .collect(Collectors.toList());
-
-        List<Map<String, Object>> sourceCodeExclusive = exclusiveToSource.stream()
-                .map(id -> createMethodMap(id, null, sourceCodeMap.get(id)))
-                .collect(Collectors.toList());
-
-        // Structuring the final JSON output
-        Map<String, List<Map<String, Object>>> categorizedMethods = new HashMap<>();
-        categorizedMethods.put("common", common);
-        categorizedMethods.put("bytecodeExclusive", bytecodeExclusive);
-        categorizedMethods.put("sourceCodeExclusive", sourceCodeExclusive);
-
+        return matches;
+    }
+    public static void writeListMapToJsonFile(List<Map<String, Object>> list, String filePath) {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        String jsonOutput = gson.toJson(categorizedMethods);
-
-        Path filePath = Paths.get(outputPath, "methodMappings.json");
-        try (FileWriter writer = new FileWriter(filePath.toFile())) {
-            writer.write(jsonOutput);
+        try (Writer writer = new FileWriter(filePath)) {
+            gson.toJson(list, writer);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
-    private Map<String, Object> createMethodMap(MethodIdentifier id, String bytecode, String sourceCode) {
-        Map<String, Object> map = new HashMap<>();
-        map.put("methodIdentifier", id);
-        map.put("bytecode", bytecode != null ? bytecode : JsonNull.INSTANCE);
-        map.put("sourceCode", sourceCode != null ? sourceCode : JsonNull.INSTANCE);
-        return map;
-    }
-
-
-
-
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         String sourceCodePath = "../Repos/gson";
         String bytecodePath = "../Repos/gson";
         String outputPath = "./data";
 
-        SourceCodeMethodExtractor sourceExtractor = new SourceCodeMethodExtractor();
-        sourceExtractor.analyzeDirectoryForMethods(sourceCodePath);
+        // Analyze source code
+        SourceCodeMethodExtractor sourceCodeMethodExtractor = new SourceCodeMethodExtractor();
+        sourceCodeMethodExtractor.analyzeDirectoryForMethods(sourceCodePath);
+        sourceCodeMethodExtractor.exportMethodsToJson(outputPath + "/methods_sc.json");
 
-        BytecodeMethodExtractor bytecodeExtractor = new BytecodeMethodExtractor();
-        bytecodeExtractor.analyzeDirectoryForMethods(bytecodePath);
+        // Analyze byte code
+        BytecodeMethodExtractor bytecodeMethodExtractor = new BytecodeMethodExtractor();
+        bytecodeMethodExtractor.analyzeDirectoryForMethods(bytecodePath);
+        bytecodeMethodExtractor.exportMethodsToJson(outputPath + "/methods_bc.json");
 
-        SourceCodeToBytecodeMapper mapper = new SourceCodeToBytecodeMapper();
+        // Get methods
+        List<Map<String, Object>> scMethods = sourceCodeMethodExtractor.getMethods();
+        List<Map<String, Object>> bcMethods = bytecodeMethodExtractor.getMethods();
 
-        mapper.mapMethodsAndExportToJson(sourceExtractor.getMethodsSource(), bytecodeExtractor.getMethodsBytecode(), outputPath);
+        // DEBUG: The following lines can be used to get intermediate state of the outputs.
+        // writeListMapToJsonFile(scMethods, outputPath + "/db_methods_sc.json");
+        // writeListMapToJsonFile(bcMethods, outputPath + "/db_methods_bc.json");
+
+        // Compute matching
+        List<Map<String, Object>> result = map(scMethods, bcMethods);
+        writeListMapToJsonFile(result, outputPath + "/mapped_methods.json");
     }
 }
