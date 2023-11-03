@@ -13,13 +13,59 @@ public class SourceCodeToBytecodeMapper {
     public static List<Map<String, Object>> left_join(List<Map<String, Object>> scMethods, List<Map<String, Object>> bcMethods) {
         // TODO: Optimize this.
 
-        return new ArrayList<>();
+        // Methods in sc but not in bc.
+
+        List<Map<String, Object>> matches = new ArrayList<>();
+        for (Map<String, Object> scm : scMethods) {
+            // Check for not in list.
+            boolean notInBc = true;
+
+            for (Map<String, Object> bcm : bcMethods) {
+                MethodIdentifier scmId = (MethodIdentifier) scm.get("methodIdentifier");
+                MethodIdentifier bcmId = (MethodIdentifier) bcm.get("methodIdentifier");
+                if (scmId.equals(bcmId)) {
+                    notInBc = false;
+                    break;
+                }
+            }
+
+            if (notInBc) {
+                matches.add(scm);
+            }
+        }
+
+        System.out.println(matches.size());
+
+        return matches;
     }
 
     public static List<Map<String, Object>> right_join(List<Map<String, Object>> scMethods, List<Map<String, Object>> bcMethods) {
         // TODO: Optimize this.
 
-        return new ArrayList<>();
+        // Methods in bc but not in sc.
+
+        List<Map<String, Object>> matches = new ArrayList<>();
+        for (Map<String, Object> bcm : bcMethods) {
+            // Check for not in list.
+            boolean notInSc = true;
+
+            for (Map<String, Object> scm : scMethods) {
+                MethodIdentifier scmId = (MethodIdentifier) scm.get("methodIdentifier");
+                MethodIdentifier bcmId = (MethodIdentifier) bcm.get("methodIdentifier");
+                if (scmId.equals(bcmId)) {
+                    notInSc = false;
+                    break;
+                }
+            }
+
+            if (notInSc) {
+                matches.add(bcm);
+            }
+        }
+
+        System.out.println(matches.size());
+
+        return matches;
     }
 
     public static List<Map<String, Object>> inner_join(List<Map<String, Object>> scMethods, List<Map<String, Object>> bcMethods) {
@@ -83,7 +129,8 @@ public class SourceCodeToBytecodeMapper {
         // writeListMapToJsonFile(bcMethods, outputPath + "/db_methods_bc.json");
 
         // Compute matching
-        List<Map<String, Object>> result = inner_join(scMethods, bcMethods);
-        writeListMapToJsonFile(result, outputPath + "/mapped_methods.json");
+        writeListMapToJsonFile(inner_join(scMethods, bcMethods), outputPath + "/mapped_methods.json");
+        writeListMapToJsonFile(left_join(scMethods, bcMethods), outputPath + "/in_sc____not_in_bc.json____LEFT_JOIN.json");
+        writeListMapToJsonFile(right_join(scMethods, bcMethods), outputPath + "/notin_sc____in_bc.json____RIGHT_JOIN.json");
     }
 }
