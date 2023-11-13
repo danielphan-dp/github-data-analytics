@@ -58,23 +58,12 @@ public class MethodIdentifier {
                 that.methodName
         );
 
-        // TODO: More logic to add here. At the moment, only short-handed type are used.
-        boolean returnTypeMatch = true;
-        if (classNameMatch && methodNameMatch) {
-            String[] ta1 = this.returnType.replace("$", ".").split("\\.");
-            String[] ta2 = that.returnType.replace("$", ".").split("\\.");
-            String rt1 = ta1[ta1.length - 1];
-            String rt2 = ta2[ta2.length - 1];
+        boolean returnTypeMatch = Objects.equals(
+                this.returnType.replace("$", "."),
+                that.returnType.replace("$", ".")
+        );
 
-            if (!Objects.equals(rt1, rt2)) {
-                returnTypeMatch = false;
-            }
-
-        } else {
-            returnTypeMatch = false;
-        }
-
-        // TODO: More logic to add here. At the moment, only short-handed type are used.
+        // TODO: Use fully qualified names here.
         boolean parameterTypesMatch = true;
         if (classNameMatch && methodNameMatch && returnTypeMatch &&
                 this.parameterTypes.size() == that.parameterTypes.size()) {
@@ -85,9 +74,6 @@ public class MethodIdentifier {
                 String thisSimplifiedType = ta1[ta1.length - 1];
                 String thatSimplifiedType = ta2[ta2.length - 1];
                 if (!Objects.equals(thisSimplifiedType, thatSimplifiedType)) {
-                    // DEBUG
-//                    System.out.println("Type Not equal: " + thisSimplifiedType + " " + thatSimplifiedType);
-
                     parameterTypesMatch = false;
                 }
 

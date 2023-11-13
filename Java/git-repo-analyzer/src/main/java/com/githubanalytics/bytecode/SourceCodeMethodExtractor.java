@@ -5,6 +5,11 @@ import com.github.javaparser.ast.*;
 import com.github.javaparser.ast.body.*;
 import com.github.javaparser.ast.type.*;
 import com.github.javaparser.ast.visitor.*;
+import com.github.javaparser.resolution.UnsolvedSymbolException;
+import com.github.javaparser.symbolsolver.JavaSymbolSolver;
+import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
+import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
+import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -14,9 +19,18 @@ import java.util.*;
 public class SourceCodeMethodExtractor {
     private final List<Map<String, Object>> methods = new ArrayList<>();
 
-    static {
-        ParserConfiguration configuration = new ParserConfiguration().setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_17);
-        StaticJavaParser.setConfiguration(configuration);
+    public SourceCodeMethodExtractor() {
+        CombinedTypeSolver combinedTypeSolver = new CombinedTypeSolver();
+        combinedTypeSolver.add(new ReflectionTypeSolver());
+
+        // Add a JavaParserTypeSolver if you have the source code of the libraries you use
+        combinedTypeSolver.add(new JavaParserTypeSolver(new File("../Repos/gson")));
+
+        ParserConfiguration parserConfiguration = new ParserConfiguration()
+                .setSymbolResolver(new JavaSymbolSolver(combinedTypeSolver))
+                .setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_17);
+
+        StaticJavaParser.setConfiguration(parserConfiguration);
     }
 
     public List<Map<String, Object>> getMethods() {
@@ -48,21 +62,51 @@ public class SourceCodeMethodExtractor {
             cu.accept(new VoidVisitorAdapter<Void>() {
                 @Override
                 public void visit(MethodDeclaration n, Void arg) {
-                    super.visit(n, arg);
-                    String className = getFullyQualifiedName(n).orElse("");
-                    String methodName = n.getNameAsString();
-                    String returnType = eraseGenerics(n.getType());
+                    // When resolving types, if error occurred when processing an entry. Simply log it out.
+                    try {
+                        super.visit(n, arg);
 
-                    List<String> paramTypes = new ArrayList<>();
-                    for (Parameter param : n.getParameters()) {
-                        paramTypes.add(eraseGenerics(param.getType()));
+                        // Retrieving class name.
+                        String className = n.findAncestor(ClassOrInterfaceDeclaration.class)
+                                .flatMap(node -> getFullyQualifiedName(node))
+                                .orElse("");
+
+                        // Retrieving method name.
+                        String methodName = n.getNameAsString();
+
+                        // Retrieving method name.
+                        String returnType;
+                        try {
+                            returnType = getQualifiedName(n.getType());
+                        } catch (UnsolvedSymbolException | IllegalArgumentException e) {
+                            System.err.println("Failed to resolve return type for method " + methodName + ", using raw type.");
+                            returnType = n.getType().asString();
+                        }
+
+                        // Retrieving parameter types.
+                        List<String> paramTypes = new ArrayList<>();
+                        for (Parameter param : n.getParameters()) {
+                            try {
+                                paramTypes.add(getQualifiedName(param.getType()));
+                            } catch (UnsolvedSymbolException | IllegalArgumentException e) {
+                                System.err.println("Failed to resolve type for parameter " + param.getName() + " in method " + methodName + ", using raw type.");
+                                paramTypes.add(param.getType().asString()); // Use the raw type as a fallback.
+                            }
+                        }
+
+                        // Build the entry.
+                        MethodIdentifier methodIdentifier = new MethodIdentifier(className, methodName, paramTypes, returnType);
+                        String sourceCode = n.toString();
+                        Map<String, Object> methodMap = new HashMap<>();
+                        methodMap.put("methodIdentifier", methodIdentifier);
+                        methodMap.put("sourceCode", sourceCode);
+
+                        // Add the entry to the collection.
+                        methods.add(methodMap);
+
+                    } catch (IllegalArgumentException e) {
+                        System.err.println("Skipping method due to exception: " + e.getMessage());
                     }
-
-                    String methodSource = n.toString();
-                    Map<String, Object> methodMap = new HashMap<>();
-                    methodMap.put("methodIdentifier", new MethodIdentifier(className, methodName, paramTypes, returnType));
-                    methodMap.put("sourceCode", methodSource);
-                    methods.add(methodMap);
                 }
             }, null);
         } catch (IOException e) {
@@ -79,26 +123,16 @@ public class SourceCodeMethodExtractor {
         return "";
     }
 
-    private Optional<String> getFullyQualifiedName(Node node) {
-        if (node instanceof ClassOrInterfaceDeclaration) {
-            ClassOrInterfaceDeclaration classDecl = (ClassOrInterfaceDeclaration) node;
-            String className = classDecl.getNameAsString();
-            Node parentNode = classDecl.getParentNode().orElse(null);
-            if (parentNode instanceof ClassOrInterfaceDeclaration) {
-                className = getFullyQualifiedName(parentNode).orElse("") + "$" + className;
-            } else {
-                Optional<PackageDeclaration> pkgDecl = classDecl.findCompilationUnit().flatMap(CompilationUnit::getPackageDeclaration);
-                if (pkgDecl.isPresent()) {
-                    className = pkgDecl.get().getNameAsString() + "." + className;
-                }
-            }
-            return Optional.of(className);
-        } else if (node instanceof CompilationUnit) {
-            return Optional.empty(); // Reached the top level, no class found
-        } else if (node != null) {
-            return getFullyQualifiedName(node.getParentNode().orElse(null));
+    private Optional<String> getFullyQualifiedName(ClassOrInterfaceDeclaration classOrInterfaceDeclaration) {
+        return classOrInterfaceDeclaration.getFullyQualifiedName(); // This method already returns Optional<String>
+    }
+
+    private String getQualifiedName(Type type) {
+        try {
+            return type.resolve().asReferenceType().getQualifiedName();
+        } catch (UnsolvedSymbolException | UnsupportedOperationException ex) {
+            return type.toString();
         }
-        return Optional.empty();
     }
 
     private String eraseGenerics(Type type) {
