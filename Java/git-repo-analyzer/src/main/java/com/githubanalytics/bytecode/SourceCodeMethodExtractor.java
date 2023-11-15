@@ -106,24 +106,6 @@ public class SourceCodeMethodExtractor {
                         methodMap.put("methodIdentifier", methodIdentifier);
                         methodMap.put("sourceCode", sourceCode);
 
-                        // Further parse sourceCode to get the called external methods. This will be used for future
-                        // reconciliation.
-                        List<Map<String, Object>> calledExternalMethods = new ArrayList<>();
-                        MethodDeclaration methodDeclaration = StaticJavaParser.parseMethodDeclaration(sourceCode);
-                        methodDeclaration.accept(new VoidVisitorAdapter<Void>() {
-                            @Override
-                            public void visit(MethodCallExpr n, Void arg) {
-                                Map<String, Object> methodDetails = new HashMap<>();
-                                methodDetails.put("methodName", n.getNameAsString());
-                                methodDetails.put("numParams", n.getArguments().size());
-                                calledExternalMethods.add(methodDetails);
-                                super.visit(n, arg);
-                            }
-                        }, null);
-
-                        // Add the list to the methodMap
-                        methodMap.put("calledExternalMethods", calledExternalMethods);
-
                         // Add the entry to the collection.
                         methods.add(methodMap);
 
