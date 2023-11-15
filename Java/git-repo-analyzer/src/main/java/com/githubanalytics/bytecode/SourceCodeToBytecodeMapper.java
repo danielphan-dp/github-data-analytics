@@ -34,7 +34,7 @@ public class SourceCodeToBytecodeMapper {
             }
         }
 
-        System.out.println("Samples in SC not in BC: " + matches.size());
+        System.out.println("Samples in source code set, but not in bytecode set: " + matches.size());
 
         return matches;
     }
@@ -63,7 +63,7 @@ public class SourceCodeToBytecodeMapper {
             }
         }
 
-        System.out.println("Samples in BC not in SC: " + matches.size());
+        System.out.println("Samples in bytecode set, but not in source code set: " + matches.size());
 
         return matches;
     }
@@ -114,12 +114,12 @@ public class SourceCodeToBytecodeMapper {
         // Analyze source code
         SourceCodeMethodExtractor sourceCodeMethodExtractor = new SourceCodeMethodExtractor();
         sourceCodeMethodExtractor.analyzeDirectoryForMethods(sourceCodePath);
-        // sourceCodeMethodExtractor.exportMethodsToJson(outputPath + "/methods_sc.json");
+        sourceCodeMethodExtractor.exportMethodsToJson(outputPath + "/methods_sc.json");
 
         // Analyze byte code
         BytecodeMethodExtractor bytecodeMethodExtractor = new BytecodeMethodExtractor();
         bytecodeMethodExtractor.analyzeDirectoryForMethods(bytecodePath);
-        // bytecodeMethodExtractor.exportMethodsToJson(outputPath + "/methods_bc.json");
+        bytecodeMethodExtractor.exportMethodsToJson(outputPath + "/methods_bc.json");
 
         // Get methods
         List<Map<String, Object>> scMethods = sourceCodeMethodExtractor.getMethods();
@@ -131,8 +131,8 @@ public class SourceCodeToBytecodeMapper {
 
 
         System.out.println("PRE CALCULATIONS");
-        System.out.println(scMethods.size());
-        System.out.println(bcMethods.size());
+        System.out.println("Source code samples count: " + scMethods.size());
+        System.out.println("Bytecode samples count: " + bcMethods.size());
 
 
         System.out.println("\nPOST CALCULATIONS");
@@ -146,7 +146,7 @@ public class SourceCodeToBytecodeMapper {
         writeListMapToJsonFile(lj, outputPath + "/in_sc____notin_bc.json____LEFT_JOIN.json");
         writeListMapToJsonFile(rj, outputPath + "/notin_sc____in_bc.json____RIGHT_JOIN.json");
 
-        System.out.println("Source code match rate: " + (ij.size() * 100 / scMethods.size()) + "%");
+        System.out.println("Source code to bytecode match rate: " + (ij.size() * 100 / scMethods.size()) + "%");
 
         // TODO: Check elements that are in check if there are matching in left_join and right_join sets.
 

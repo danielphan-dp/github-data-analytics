@@ -65,8 +65,7 @@ public class MethodIdentifier {
 
         // TODO: Use fully qualified names here.
         boolean parameterTypesMatch = true;
-        if (classNameMatch && methodNameMatch && returnTypeMatch &&
-                this.parameterTypes.size() == that.parameterTypes.size()) {
+        if (classNameMatch && methodNameMatch && returnTypeMatch && this.parameterTypes.size() == that.parameterTypes.size()) {
             int s = this.parameterTypes.size();
             for (int i = 0; i < s; ++i) {
                 String[] ta1 = this.parameterTypes.get(i).replace("$", ".").split("\\.");
@@ -80,10 +79,6 @@ public class MethodIdentifier {
                 // TODO: Handle edge cases here. Compile a white list.
                 // if (Objects.equals(thisSimplifiedType, "T") && Objects.equals(thatSimplifiedType, "Object")) parameterTypesMatch = true;
                 // if (Objects.equals(thatSimplifiedType, "T") && Objects.equals(thisSimplifiedType, "Object")) parameterTypesMatch = true;
-
-                // TODO: More check.
-                // If everything is matched until this point. And returnType is "java.lang.Object"
-                // give this case the "benefit of the doubt".
             }
         } else {
             parameterTypesMatch = false;
@@ -93,9 +88,13 @@ public class MethodIdentifier {
         // Edge case 1
         if (classNameMatch && methodNameMatch && parameterTypesMatch)
             // At this point, benefit of the doubt can be given.
-            if (Objects.equals(this.returnType, "java.lang.Object") || Objects.equals(that.returnType, "java.lang.Object")) {
+            if (Objects.equals(this.returnType, "java.lang.Object") ||
+                    Objects.equals(that.returnType, "java.lang.Object")) {
                 returnTypeMatch = true;
             }
+
+        // Edge case <n>:
+        // ...
 
         return classNameMatch &&
                 methodNameMatch &&

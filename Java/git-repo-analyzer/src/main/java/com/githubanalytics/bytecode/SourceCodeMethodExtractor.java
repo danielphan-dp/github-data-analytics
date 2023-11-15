@@ -3,8 +3,11 @@ package com.githubanalytics.bytecode;
 import com.github.javaparser.*;
 import com.github.javaparser.ast.*;
 import com.github.javaparser.ast.body.*;
+import com.github.javaparser.ast.expr.MethodCallExpr;
+import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.type.*;
 import com.github.javaparser.ast.visitor.*;
+import com.github.javaparser.printer.configuration.PrettyPrinterConfiguration;
 import com.github.javaparser.resolution.UnsolvedSymbolException;
 import com.github.javaparser.symbolsolver.JavaSymbolSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
@@ -59,22 +62,24 @@ public class SourceCodeMethodExtractor {
     private void processJavaFile(File file) {
         try {
             CompilationUnit cu = StaticJavaParser.parse(file);
+            cu.removeComment();
             cu.accept(new VoidVisitorAdapter<Void>() {
                 @Override
                 public void visit(MethodDeclaration n, Void arg) {
                     // When resolving types, if error occurred when processing an entry. Simply log it out.
                     try {
+                        n.removeComment();
                         super.visit(n, arg);
 
-                        // Retrieving class name.
+                        // Retrieve class name.
                         String className = n.findAncestor(ClassOrInterfaceDeclaration.class)
                                 .flatMap(node -> getFullyQualifiedName(node))
                                 .orElse("");
 
-                        // Retrieving method name.
+                        // Retrieve method name.
                         String methodName = n.getNameAsString();
 
-                        // Retrieving method name.
+                        // Retrieve return type.
                         String returnType;
                         try {
                             returnType = getQualifiedName(n.getType());
@@ -83,7 +88,7 @@ public class SourceCodeMethodExtractor {
                             returnType = n.getType().asString();
                         }
 
-                        // Retrieving parameter types.
+                        // Retrieve parameter types.
                         List<String> paramTypes = new ArrayList<>();
                         for (Parameter param : n.getParameters()) {
                             try {
@@ -96,10 +101,28 @@ public class SourceCodeMethodExtractor {
 
                         // Build the entry.
                         MethodIdentifier methodIdentifier = new MethodIdentifier(className, methodName, paramTypes, returnType);
-                        String sourceCode = n.toString();
+                        String sourceCode = n.toString(new PrettyPrinterConfiguration().setPrintComments(false));
                         Map<String, Object> methodMap = new HashMap<>();
                         methodMap.put("methodIdentifier", methodIdentifier);
                         methodMap.put("sourceCode", sourceCode);
+
+                        // Further parse sourceCode to get the called external methods. This will be used for future
+                        // reconciliation.
+                        List<Map<String, Object>> calledExternalMethods = new ArrayList<>();
+                        MethodDeclaration methodDeclaration = StaticJavaParser.parseMethodDeclaration(sourceCode);
+                        methodDeclaration.accept(new VoidVisitorAdapter<Void>() {
+                            @Override
+                            public void visit(MethodCallExpr n, Void arg) {
+                                Map<String, Object> methodDetails = new HashMap<>();
+                                methodDetails.put("methodName", n.getNameAsString());
+                                methodDetails.put("numParams", n.getArguments().size());
+                                calledExternalMethods.add(methodDetails);
+                                super.visit(n, arg);
+                            }
+                        }, null);
+
+                        // Add the list to the methodMap
+                        methodMap.put("calledExternalMethods", calledExternalMethods);
 
                         // Add the entry to the collection.
                         methods.add(methodMap);

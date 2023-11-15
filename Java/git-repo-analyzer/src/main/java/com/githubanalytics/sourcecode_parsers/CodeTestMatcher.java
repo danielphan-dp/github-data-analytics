@@ -93,12 +93,12 @@ public class CodeTestMatcher {
 
     public static void main(String[] args) {
         Path currentDir = Paths.get(System.getProperty("user.dir"));
-        Path repoDir = currentDir.resolve("Data/github-cloned-repos/google_guava");
+        Path repoDir = currentDir.resolve("../Repos/gson");
         CodeTestMatcher matcher = new CodeTestMatcher(repoDir);
 
         try {
             List<Map<String, String>> codeTestPairs = matcher.matchCodeToTests();
-            Path outputPath = Paths.get("google_guava-code-test-pairs.json");
+            Path outputPath = Paths.get("gson__code-test-pairs.json");
             matcher.saveCodeTestPairsToFile(codeTestPairs, outputPath);
             System.out.println("Results saved to " + outputPath.toAbsolutePath());
         } catch (IOException e) {
